@@ -2,6 +2,8 @@
 
 A simple Ruby-based web scraper designed to help developers filter through job postings on the HackerNews job board, specifically targeting Ruby and Rails jobs.
 
+For a walkthrough of the code, check out the [medium post](https://medium.com/@ben.muiruri13/simplify-your-job-hunt-using-a-simple-ruby-web-scraper-ace8bd1bf1fd).
+
 ## Table of Contents
 
 - [Ruby Job Scraper 🕷️](#ruby-job-scraper-️)
