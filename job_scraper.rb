@@ -1,59 +1,59 @@
-# frozen_string_literal: true
-
+require 'httparty'
 require 'nokogiri'
-require 'selenium-webdriver'
-require 'open-uri'
 
-URL = 'https://news.ycombinator.com/item?id=35424807'
-KEYWORDS = %w[Ruby Remote Rails].freeze
-OUTPUT_FILE = 'job_postings.txt'
+KEYWORDS = ["React", "Ruby", "Rails"]
+
+def fetch_jobs(page)
+  url = "https://news.ycombinator.com/item?id=35773707&p=#{page}"
+  unparsed_page = HTTParty.get(url)
+  Nokogiri::HTML(unparsed_page)
+end
 
 def filtered_jobs(document, keywords)
-  jobs = document.css('tr.athing td.default div.comment span.commtext')
-  jobs.select { |job| keywords.any? { |keyword| job.text.downcase.include?(keyword.downcase) } }
-end
+  job_posts = document.css("tr.athing.comtr")
 
-def setup_driver
-  options = Selenium::WebDriver::Chrome::Options.new
-  options.add_argument('--headless')
-  Selenium::WebDriver.for(:chrome, options: options)
-end
-
-def load_all_comments(driver, url)
-  driver.get(url)
-  loop do
-    more_jobs_link = driver.find_elements(:xpath, '//a[contains(text(), "more comments")]').first
-    break if more_jobs_link.nil?
-
-    more_jobs_link.click
-    sleep 3
-  end
-  Nokogiri::HTML(driver.page_source)
-ensure
-  driver&.quit
-end
-
-def write_job_postings_to_file(job_postings, output_file)
-  File.open(output_file, 'w') do |file|
-    if job_postings.empty?
-      file.write("No job postings found with the specified keywords.\n")
-    else
-      file.write("Found #{job_postings.length} job postings\n")
-      job_postings.each_with_index do |job, index|
-        file.write("Job posting #{index + 1}: #{job.text.strip}\n\n")
-      end
-    end
+  job_posts.select do |job_post|
+    text = job_post.text
+    keywords.any? { |keyword| text.include?(keyword) }
   end
 end
 
-def main
-  driver = setup_driver
-  document = load_all_comments(driver, URL)
-  job_postings = filtered_jobs(document, KEYWORDS)
-  write_job_postings_to_file(job_postings, OUTPUT_FILE)
-  puts "Results of #{job_postings.length} jobs have been written to #{OUTPUT_FILE}."
-rescue StandardError => e
-  puts "An error occurred while trying to scrape the pages: #{e.message}"
+def clean_text(text)
+  text.gsub(/\s+/, ' ').strip
 end
 
-main
+def extract_job_details(comment)
+  {
+    title: clean_text(comment.css('.hnuser').text),
+    time: clean_text(comment.css('.age a').text),
+    details: clean_text(comment.css('.commtext').inner_html.gsub(/<[^>]*>/, ''))
+  }
+end
+
+def formatted_job_postings(job_postings)
+  output = "Found #{job_postings.count} job postings\n"
+  job_postings.each_with_index do |posting, index|
+    output << "Job posting #{index + 1}: #{posting[:title]} | #{posting[:time]}\n#{posting[:details]}\n\n"
+  end
+  output
+end
+
+def save_jobs(jobs)
+  File.open("job_postings.txt", "w") do |file|
+    file.write(jobs)
+  end
+end
+
+# Scrape the first 3 pages
+pages_to_scrape = 3
+all_jobs = []
+
+(1..pages_to_scrape).each do |page|
+  document = fetch_jobs(page)
+  jobs = filtered_jobs(document, KEYWORDS)
+  all_jobs += jobs
+end
+
+cleaned_jobs = all_jobs.map { |job| extract_job_details(job) }
+formatted_jobs = formatted_job_postings(cleaned_jobs)
+save_jobs(formatted_jobs)
