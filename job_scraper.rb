@@ -94,7 +94,7 @@ class JobScraper
 
   def save_jobs(jobs, file = JOB_POSTINGS_FILE)
     File.open(file, "w") { |file| file.write(jobs) }
-    puts "Found #{all_jobs.count} jobs and saved them to #{JOB_POSTINGS_FILE}"
+    puts "Found #{@all_jobs.count} jobs and saved them to #{JOB_POSTINGS_FILE}"
   rescue StandardError => error
     puts "Error occurred while saving jobs: #{error.message}"
   end
