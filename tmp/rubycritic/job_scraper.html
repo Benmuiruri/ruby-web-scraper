@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Ruby Critic - Home</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- StyleSheets -->
+    <link href="assets/vendor/stylesheets/bootstrap.min.css" media="screen, projection, print" rel="stylesheet" type="text/css">
+    <link href="assets/vendor/stylesheets/font-awesome.min.css" media="screen, projection, print" rel="stylesheet" type="text/css">
+    <link href="assets/vendor/stylesheets/prettify.custom_theme.css" media="screen, projection, print" rel="stylesheet" type="text/css">
+    <link href="assets/stylesheets/application.css" media="screen, projection, print" rel="stylesheet" type="text/css">
+  </head>
+
+  <body>
+    <header class="navbar navbar-default navbar-fixed-top">
+      <a href="#menu-toggle" class="btn btn-default hidden-lg visible-sm-* hidden-md visible-xs-* pull-left" id="menu-toggle"><i class="fa fa-bars" aria-hidden="true"></i></a>
+      <a href="overview.html"><img src="assets/images/logo.png" alt="Ruby Critic Logo" title="Ruby Critic Logo" width="55"><span class="logo">RUBYCRITIC</span></a>
+      
+    </header>
+    <div id="wrapper">
+      <!-- Sidebar -->
+      <aside id="sidebar-wrapper">
+        <ul class="sidebar-nav">
+          <li class="sidebar-item">
+            <a href="overview.html" class="project-nav-item overview-nav"><i class="fa fa-dashboard"></i>Overview</a>
+          </li>
+          <li class="sidebar-item">
+            <a href="code_index.html" class="project-nav-item code-index-nav"><i class="fa fa-code"></i>Code</a>
+          </li>
+          <li class="sidebar-item">
+            <a href="smells_index.html" class="project-nav-item smells-index-nav"><i class="fa fa-warning"></i>Smells</a>
+          </li>
+          <li class="sidebar-item">
+            <a href="simple_cov_index.html" class="project-nav-item coverage-index-nav"><i class="fa fa-umbrella"></i>Coverage</a>
+          </li>
+        </ul>
+      </aside>
+      <!-- /#sidebar-wrapper -->
+      <div id="page-content-wrapper">
+        <div class="container-fluid">
+          <div class="row">
+  <!--Page Title -->
+  <div class="Page_Title">
+    <div class="file-time">
+      <span class="committed-at">
+        
+          Updated <time class='js-timeago' datetime='2023-07-13 12:32:30 +0300'>2023-07-13 12:32:30 +0300</time>
+        
+      </span>
+    </div>
+    <div>
+      <h3><small>. /</small> job_scraper.rb</h3>
+    </div>
+  </div>
+  <!--End Page Title -->
+  <div class="Content_Wrapper">
+    <!-- code detail -->
+    <div class="code-top-detail clearfix row">
+      <div class="col-md-8">
+        <div class="row">
+          <div class="col-md-1">
+            <div class="rating b big">
+              B
+            </div>
+          </div>
+          <div class="code-statistics col-md-11">
+            <div class="col-md-3">
+              <div><span class="metric">103</span><small> lines of codes</small></div>
+              <div><span class="metric">11</span><small> methods</small></div>
+            </div>
+            <div class="col-md-3">
+              <div><span class="metric">6.7</span><small> complexity/method</small></div>
+              <div><span class="metric">4</span><small> churn</small></div>
+            </div>
+            <div class="col-md-3">
+              <div><span class="metric">74.02</span><small> complexity</small></div>
+              <div><span class="metric">0</span><small> duplications</small></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="code-tabs">
+          <ul class="nav nav-pills right-to-left">
+            <li><a href="#" id="toggle-code" class="toggle-button button">code</a></li>
+            <li class="active">
+              <a href="#" id="toggle-smells" class="toggle-button button">
+                0
+                smell
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <code class="prettyprint linenums lang-ruby file-code js-file-code">require &#39;httparty&#39;
+require &#39;nokogiri&#39;
+
+KEYWORDS = [&quot;Ruby&quot;, &quot;Rails&quot;]
+JOB_POSTINGS_FILE = &quot;job_postings.txt&quot;
+PAGES_TO_SCRAPE = 5
+
+# PageRetriever is responsible for fetching an HTML document from a given URL
+class PageRetriever
+  def self.fetch(url)
+    response = HTTParty.get(url)
+
+    if response.success?
+      Nokogiri::HTML(response.body)
+    else
+      raise &quot;Unable to fetch the page, response code: #{response.code}&quot;
+    end
+  rescue StandardError =&gt; error
+    puts &quot;Error occurred while fetching jobs: #{error.message}&quot;
+  end
+end
+
+# JobScraper is responsible for scraping job postings from a website
+class JobScraper
+  # TextHelper is responsible for cleaning text and HTML
+  class TextHelper
+    def self.clean_text(text)
+      text.gsub(/\s+/, &#39; &#39;).strip
+    end
+
+    def self.clean_html(html)
+      html.gsub(/&lt;[^&gt;]*&gt;/, &#39;&#39;)
+    end
+  end
+
+  # JobFilter is responsible for filtering job postings based on given keywords
+  class JobFilter
+    def self.filter(document)
+      return [] unless document
+
+      document.css(&quot;tr.athing.comtr&quot;).reduce([]) do |acc, job_post|
+        acc &lt;&lt; job_post if keyword_present_in_text?(job_post.text)
+        acc
+      end
+    end
+
+    def self.keyword_present_in_text?(text)
+      KEYWORDS.any? { |keyword| text.include?(keyword) }
+    end
+  end
+
+  # JobDetailsExtractor is responsible for extracting details from job postings
+  class JobDetailsExtractor
+    def self.extract(comment)
+      {
+        title: TextHelper.clean_text(comment.css(&#39;.hnuser&#39;).text),
+        time: TextHelper.clean_text(comment.css(&#39;.age a&#39;).text),
+        details: TextHelper.clean_text(TextHelper.clean_html(comment.css(&#39;.commtext&#39;).inner_html))
+      }
+    end
+  end
+
+  # JobFormatter is responsible for formatting job postings for output
+  class JobFormatter
+    def self.format(job_postings)
+      output = [&quot;Found #{job_postings.count} job postings&quot;]
+      job_postings.each_with_index do |posting, index|
+        output &lt;&lt; &quot;Job posting #{index + 1}: #{posting[:title]} | #{posting[:time]}\n#{posting[:details]}\n&quot;
+      end
+      output.join(&quot;\n&quot;)
+    end
+  end
+
+  def initialize
+    @all_jobs = []
+  end
+
+  def scrape_jobs
+    retrieve_all_jobs
+    cleaned_jobs = @all_jobs.map { |job| JobDetailsExtractor.extract(job) }
+    save_jobs(JobFormatter.format(cleaned_jobs))
+  end
+
+  private
+
+  def retrieve_all_jobs
+    puts &quot;Scraping #{PAGES_TO_SCRAPE} pages for jobs with keywords: #{KEYWORDS.join(&#39;, &#39;)}&quot;
+    (1..PAGES_TO_SCRAPE).each do |page|
+      url = &quot;https://news.ycombinator.com/item?id=36573871&amp;p=#{page}&quot;
+      document = PageRetriever.fetch(url)
+      @all_jobs += JobFilter.filter(document)
+    end
+  end
+
+  def save_jobs(jobs, file = JOB_POSTINGS_FILE)
+    File.open(file, &quot;w&quot;) { |file| file.write(jobs) }
+    puts &quot;Found #{@all_jobs.count} jobs and saved them to #{JOB_POSTINGS_FILE}&quot;
+  rescue StandardError =&gt; error
+    puts &quot;Error occurred while saving jobs: #{error.message}&quot;
+  end
+end
+
+JobScraper.new.scrape_jobs
+</code>
+  </div>
+</div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- JavaScripts -->
+    <script src="assets/vendor/javascripts/jquery.min.js"></script>
+    <script src="assets/vendor/javascripts/jquery.tablesorter.min.js"></script>
+    <script src="assets/vendor/javascripts/jquery.scrollTo.min.js"></script>
+    <script src="assets/vendor/javascripts/jquery.timeago.js"></script>
+    <script src="assets/vendor/javascripts/highcharts.src-4.0.1.js"></script>
+    <script src="assets/vendor/javascripts/prettify.js"></script>
+    <script src="assets/vendor/javascripts/bootstrap.min.js"></script>
+    <script src="assets/javascripts/application.js"></script>
+    <script src="assets/vendor/javascripts/jquery.filtertable.min.js"></script>
+  </body>
+</html>
