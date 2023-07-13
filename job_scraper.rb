@@ -1,8 +1,10 @@
+# frozen_string_literal: true
+
 require 'httparty'
 require 'nokogiri'
 
-KEYWORDS = ["Ruby", "Rails"]
-JOB_POSTINGS_FILE = "job_postings.txt"
+KEYWORDS = %w[Ruby Rails].freeze
+JOB_POSTINGS_FILE = 'job_postings.txt'
 PAGES_TO_SCRAPE = 5
 
 # PageRetriever is responsible for fetching an HTML document from a given URL
@@ -10,13 +12,11 @@ class PageRetriever
   def self.fetch(url)
     response = HTTParty.get(url)
 
-    if response.success?
-      Nokogiri::HTML(response.body)
-    else
-      raise "Unable to fetch the page, response code: #{response.code}"
-    end
-  rescue StandardError => error
-    puts "Error occurred while fetching jobs: #{error.message}"
+    raise "Unable to fetch the page, response code: #{response.code}" unless response.success?
+
+    Nokogiri::HTML(response.body)
+  rescue StandardError => e
+    puts "Error occurred while fetching jobs: #{e.message}"
   end
 end
 
@@ -38,9 +38,8 @@ class JobScraper
     def self.filter(document)
       return [] unless document
 
-      document.css("tr.athing.comtr").reduce([]) do |acc, job_post|
+      document.css('tr.athing.comtr').each_with_object([]) do |job_post, acc|
         acc << job_post if keyword_present_in_text?(job_post.text)
-        acc
       end
     end
 
@@ -92,11 +91,11 @@ class JobScraper
     end
   end
 
-  def save_jobs(jobs, file = JOB_POSTINGS_FILE)
-    File.open(file, "w") { |file| file.write(jobs) }
+  def save_jobs(jobs, job_file = JOB_POSTINGS_FILE)
+    File.open(job_file, 'w') { |file| file.write(jobs) }
     puts "Found #{@all_jobs.count} jobs and saved them to #{JOB_POSTINGS_FILE}"
-  rescue StandardError => error
-    puts "Error occurred while saving jobs: #{error.message}"
+  rescue StandardError => e
+    puts "Error occurred while saving jobs: #{e.message}"
   end
 end
 
