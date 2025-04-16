@@ -3,7 +3,7 @@
 require 'httparty'
 require 'nokogiri'
 
-KEYWORDS = %w[Ruby Rails].freeze
+KEYWORDS = %w[Ruby Rails EMEA].freeze
 JOB_POSTINGS_FILE = 'job_postings.txt'
 PAGES_TO_SCRAPE = 5
 
@@ -85,7 +85,7 @@ class JobScraper
   def retrieve_all_jobs
     puts "Scraping #{PAGES_TO_SCRAPE} pages for jobs with keywords: #{KEYWORDS.join(', ')}"
     (1..PAGES_TO_SCRAPE).each do |page|
-      url = "https://news.ycombinator.com/item?id=36573871&p=#{page}"
+      url = "https://news.ycombinator.com/item?id=43243024&p=#{page}"
       document = PageRetriever.fetch(url)
       @all_jobs += JobFilter.filter(document)
     end

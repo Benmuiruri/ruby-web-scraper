@@ -29,8 +29,6 @@ To get a local copy up and running, follow these simple steps.
 
 1. Clone the repo - `git clone https://github.com/Benmuiruri/ruby-web-scraper.git`
 
-2. Install required gems - `bundle install`
-
 
 ## Usage
 
